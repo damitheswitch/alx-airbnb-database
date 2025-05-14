@@ -175,29 +175,53 @@ erDiagram
 
 ## 5. Implementation Notes
 
-* **Triggers or Application Logic**:
+We added two MySQL triggers to enforce price snapshots and total calculations at insert time.
 
-  * On INSERT into `BOOKING`, set:
+### 5.1 Trigger `trg_before_booking_insert`
 
-    ```sql
-    price_at_booking = (SELECT pricepernight FROM PROPERTY WHERE property_id = NEW.property_id);
-    total_price      = price_at_booking * (NEW.end_date - NEW.start_date);
-    ```
-  * On INSERT into `PAYMENT`, set:
+```sql
+DELIMITER //
+CREATE TRIGGER trg_before_booking_insert
+BEFORE INSERT ON BOOKING
+FOR EACH ROW
+BEGIN
+  DECLARE nightly_rate DECIMAL(10,2);
+  SELECT pricepernight
+    INTO nightly_rate
+    FROM PROPERTY
+    WHERE property_id = NEW.property_id;
+  SET NEW.price_at_booking = nightly_rate;
+  SET NEW.total_price = nightly_rate * DATEDIFF(NEW.end_date, NEW.start_date);
+END;
+//
+DELIMITER ;
+```
 
-    ```sql
-    amount = (SELECT total_price FROM BOOKING WHERE booking_id = NEW.booking_id);
-    ```
+* **nightly\_rate**: local variable to hold `PROPERTY.pricepernight`.
+* **NEW\.price\_at\_booking**: assigned from `nightly_rate`.
+* **NEW\.total\_price**: calculated as `nightly_rate × number_of_days`.
 
-* **Views (Optional)**:
+### 5.2 Trigger `trg_before_payment_insert`
 
-  * If you ever need a read-only calculated view without storing `total_price`, you can define:
+```sql
+DELIMITER //
+CREATE TRIGGER trg_before_payment_insert
+BEFORE INSERT ON PAYMENT
+FOR EACH ROW
+BEGIN
+  DECLARE booking_total DECIMAL(10,2);
+  SELECT total_price
+    INTO booking_total
+    FROM BOOKING
+    WHERE booking_id = NEW.booking_id;
+  SET NEW.amount = booking_total;
+END;
+//
+DELIMITER ;
+```
 
-    ```sql
-    CREATE VIEW BookingWithTotal AS
-      SELECT *, price_at_booking * DATEDIFF(end_date, start_date) AS total_price
-      FROM BOOKING;
-    ```
+* **booking\_total**: local variable to hold `BOOKING.total_price`.
+* **NEW\.amount**: assigned from `booking_total`.
 
 ---
 
