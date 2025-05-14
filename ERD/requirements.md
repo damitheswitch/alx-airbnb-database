@@ -1,13 +1,4 @@
-erDiagram
-    USER ||--o{ PROPERTY : "hosts"
-    USER ||--o{ BOOKING : "makes"
-    USER ||--o{ REVIEW : "writes"
-    USER ||--o{ MESSAGE : "sends"
-    USER ||--o{ MESSAGE : "receives"
-    PROPERTY ||--o{ BOOKING : "has"
-    PROPERTY ||--o{ REVIEW : "receives"
-    BOOKING ||--o{ PAYMENT : "has"
-
+    erDiagram
     USER {
         string user_id PK
         string first_name
@@ -65,3 +56,12 @@ erDiagram
         string message_body
         timestamp sent_at
     }
+    
+    USER ||--o{ PROPERTY : "hosts"
+    USER ||--o{ BOOKING : "makes"
+    USER ||--o{ REVIEW : "writes"
+    USER ||--o{ MESSAGE : "sends"
+    USER ||--o{ MESSAGE : "receives"
+    PROPERTY ||--o{ BOOKING : "has"
+    PROPERTY ||--o{ REVIEW : "receives"
+    BOOKING ||--o{ PAYMENT : "has"
