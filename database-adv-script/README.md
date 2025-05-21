@@ -1,0 +1,1 @@
+This directory contains Advanced mysql queries.
